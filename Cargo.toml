@@ -25,11 +25,10 @@ egui-notify = "0.17.0"
 serde_derive = "1.0.215"
 textwrap = "0.16.1"
 which = "7.0.1"
-strum = "0.26"
-strum_macros = "0.26"
 toml = {workspace = true}
 serde = {workspace = true, features = ["derive"]}
 image = {version = "0.25.5", features = ["png", "jpeg", "webp"]}
+glob = "0.3.1"
 
 [workspace.dependencies]
 cirrus_egui = { path = "./cirrus/egui" }

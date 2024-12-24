@@ -108,7 +108,7 @@ fn main() -> eframe::Result {
         _ => Theme::default(true)
     };
 
-    let upscale = match Upscale::new() {
+    let mut upscale = match Upscale::new() {
         Ok(upscale) => upscale,
         Err(error) => {
             notifier.toasts.lock().unwrap().toast_and_log(
@@ -118,6 +118,17 @@ fn main() -> eframe::Result {
             panic!("{}", error.clone().to_string());
         }
     };
+
+    match upscale.init() {
+        Ok(_) => {},
+        Err(error) => {
+            notifier.toasts.lock().unwrap().toast_and_log(
+                error.clone().into(), ToastLevel::Error
+            );
+
+            panic!("{}", error.clone().to_string());
+        }
+    }
 
     eframe::run_native(
         "Aeternum",

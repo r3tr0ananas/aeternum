@@ -1,10 +1,9 @@
 use cirrus_theming::v1::{Colour, Theme};
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, Shadow, Slider, Stroke, Style, TextStyle, Vec2};
 use egui_notify::ToastLevel;
-use strum::IntoEnumIterator;
 use std::time::Duration;
 
-use crate::{files, notifier::NotifierAPI, upscale::{Models, Upscale}, windows::about::AboutWindow, Image};
+use crate::{files, notifier::NotifierAPI, upscale::Upscale, windows::about::AboutWindow, Image};
 
 pub struct Aeternum<'a> {
     theme: Theme,
@@ -201,11 +200,17 @@ impl eframe::App for Aeternum<'_> {
 
                     ui.label("Model");
 
+                    let selected = self.upscale.options.model.clone().unwrap().name;
+
                     egui::ComboBox::from_label("Select a model")
-                        .selected_text(format!("{}", &self.upscale.options.model.to_string()))
+                        .selected_text(format!("{}", selected))
                         .show_ui(ui, |ui| {
-                            for model in Models::iter() {
-                                ui.selectable_value(&mut self.upscale.options.model, model, model.to_string());
+                            for model in self.upscale.models.iter() {
+                                ui.selectable_value(
+                                    &mut self.upscale.options.model, 
+                                    Some(model.clone()), 
+                                    model.name.to_string()
+                                );
                             }
                         });
                     ui.end_row();

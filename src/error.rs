@@ -9,6 +9,8 @@ pub enum Error {
     NoFileSelected(AE),
     FailedToUpscaleImage(AE, String),
     UpscaylNotInPath(AE),
+    ModelsFolderNotFound(AE, PathBuf),
+    NoModels(AE, PathBuf),
     FailedToInitImage(AE, PathBuf, String),
     ImageFormatNotSupported(AE, String),
 }
@@ -48,6 +50,12 @@ impl Display for Error {
             ),
             Error::UpscaylNotInPath(..) => write!(
                 f, "upscayl-bin isn't in your path. Install it: https://github.com/upscayl/upscayl-ncnn"
+            ),
+            Error::ModelsFolderNotFound(_, path) => write!(
+                f, "Models folder not found: {}", path.display()
+            ),
+            Error::NoModels(_, path) => write!(
+                f, "No models found in folder: '{}'", path.display()
             ),
             Error::ImageFormatNotSupported(_, image_format) => write!(
                 f, "The image format '{}' is not supported!", image_format

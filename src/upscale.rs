@@ -1,45 +1,27 @@
-use core::fmt;
-use std::{env, fmt::{Display, Formatter}, io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::Duration};
+use std::{env, io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::Duration};
 use which::which;
-use strum_macros::EnumIter;
 use std::process::Command;
 
 use crate::{error::Error, image::Image, notifier::NotifierAPI};
 
-#[derive(Debug, EnumIter, PartialEq, Clone, Copy)]
-pub enum Models {
-    RealEsrganX4Plus,
-    RealEsrganX4PlusAnime
-}
+#[derive(Debug, Clone, PartialEq)]
+pub struct Model {
+    path: PathBuf,
+    folder: PathBuf,
 
-impl Display for Models {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self {
-            Models::RealEsrganX4Plus => write!(f, "Real-Esrgan"),
-            Models::RealEsrganX4PlusAnime => write!(f, "Real-Esrgan Anime")
-        }
-    }
-}
-
-
-impl Models {
-    pub fn file_name(&self) -> String {
-        match self {
-            Models::RealEsrganX4Plus => "realesrgan-x4plus".to_string(),
-            Models::RealEsrganX4PlusAnime => "realesrgan-x4plus-anime".to_string()
-        }
-    }
+    pub name: String
 }
 
 #[derive(Clone)]
 pub struct UpscaleOptions {
     pub scale: i32,
-    pub model: Models,
+    pub model: Option<Model>,
 }
 
 pub struct Upscale {
     pub options: UpscaleOptions,
     pub upscaling: bool,
+    pub models: Vec<Model>,
 
     cli: PathBuf,
     upscaling_arc: Arc<Mutex<bool>>
@@ -49,7 +31,7 @@ impl Default for UpscaleOptions {
     fn default() -> Self {
         Self {
             scale: 4,
-            model: Models::RealEsrganX4Plus,
+            model: None
         }
     }
 }
@@ -61,9 +43,16 @@ impl Upscale {
         let tool_path = executable_path.with_file_name(tool_name);
 
         if tool_path.exists() {
+            let models_folder = executable_path.with_file_name("models");
+
+            if !models_folder.exists() {
+                return Err(Error::ModelsFolderNotFound(None, models_folder))
+            }
+
             return Ok(Self {
                 options: UpscaleOptions::default(),
                 upscaling: false,
+                models: Vec::new(),
 
                 cli: tool_path,
                 upscaling_arc: Arc::new(false.into())
@@ -75,6 +64,7 @@ impl Upscale {
                 Ok(Self {
                     options: UpscaleOptions::default(),
                     upscaling: false,
+                    models: Vec::new(),
 
                     cli: path,
                     upscaling_arc: Arc::new(false.into())
@@ -86,6 +76,26 @@ impl Upscale {
                 Err(Error::UpscaylNotInPath(Some(err_mesage)))
             }
         }
+    }
+
+    pub fn init(&mut self) -> Result<(), Error> {
+        let models_folder = self.cli.with_file_name("models");
+
+        if !models_folder.exists() {
+            return Err(Error::ModelsFolderNotFound(Some("Folder doesn't exist".to_string()), models_folder))
+        }
+
+        self.get_models(models_folder.clone());
+
+        if self.models.is_empty() {
+            return Err(Error::NoModels(Some("Vector is empty.".to_string()), models_folder))
+        }
+
+        self.options.model = Some(
+            self.models.first().unwrap().clone()
+        );
+
+        Ok(())
     }
 
     pub fn update(&mut self) {
@@ -108,7 +118,7 @@ impl Upscale {
             format!(
                 "{}_{}_x{}.{}", 
                 path.file_stem().unwrap().to_string_lossy(), 
-                self.options.model.file_name(), 
+                self.options.model.as_ref().unwrap().name, 
                 self.options.scale,
                 path.extension().unwrap().to_string_lossy()
             )
@@ -125,14 +135,18 @@ impl Upscale {
 
             let mut upscale_command = Command::new(cli.to_string_lossy().to_string());
 
+            let model = &options.model.unwrap();
+
             let cmd = upscale_command
                 .args([
                     "-i",
                     path.to_str().unwrap(),
                     "-o",
                     out.to_str().unwrap(),
+                    "-m",
+                    &model.folder.to_string_lossy(),
                     "-n",
-                    &options.model.file_name(),
+                    &model.name,
                     "-s",
                     &options.scale.to_string()
                 ])
@@ -147,7 +161,9 @@ impl Upscale {
                         for line in reader.lines() {
                             match line {
                                 Ok(output) => {
-                                    if output.as_bytes()[0].is_ascii_digit() {
+                                    let out_bytes = output.as_bytes();
+
+                                    if !out_bytes.is_empty() && out_bytes[0].is_ascii_digit() {
                                         notifier_arc.set_loading(Some(format!("Processing: {}", output)));
                                     }
                                 },
@@ -179,5 +195,33 @@ impl Upscale {
         };
 
         thread::spawn(upscale_stuff);
+    }
+
+    fn get_models(&mut self, folder_path: PathBuf) {
+        let gl = format!("{}{}*.bin", folder_path.to_string_lossy(), std::path::MAIN_SEPARATOR_STR);
+
+        for entry in glob::glob(&gl).unwrap() {
+            match entry {
+                Ok(entry_path) => {
+                    let param_file = entry_path.with_file_name(
+                        format!("{}.param", entry_path.file_stem().unwrap().to_string_lossy())
+                    );
+
+                    if param_file.exists() {
+                        self.models.push(
+                            Model {
+                                path: entry_path.clone(),
+                                folder: folder_path.clone(),
+
+                                name: entry_path.file_stem().unwrap().to_string_lossy().to_string()
+                            }
+                        );
+                    }
+                },
+                Err(err) => {
+                    panic!("Error while getting models: {}", err);
+                }
+            }
+        }
     }
 }

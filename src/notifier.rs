@@ -74,6 +74,8 @@ impl ToastsManager {
                     Error::UpscaylNotInPath(actual_error) => actual_error.unwrap_or_default(),
                     Error::FailedToInitImage(actual_error, _, _) => actual_error.unwrap_or_default(),
                     Error::ImageFormatNotSupported(actual_error, _) => actual_error.unwrap_or_default(),
+                    Error::ModelsFolderNotFound(actual_error, _) => actual_error.unwrap_or_default(),
+                    Error::NoModels(actual_error, _) => actual_error.unwrap_or_default(),
                 }
             },
             StringOrError::String(string) => string,
