@@ -1,10 +1,15 @@
 // https://github.com/cloudy-org/roseate/blob/main/src/notifier.rs
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use eframe::egui::Context;
 use egui_notify::{Toast, ToastLevel, Toasts};
 
 use crate::error::Error;
+
+#[derive(Default, Clone)]
+pub struct Loading {
+    pub message: Option<String>
+}
 
 #[derive(Default)]
 pub struct ToastsManager {
@@ -66,7 +71,7 @@ impl ToastsManager {
                     Error::FileNotFound(actual_error, _, _) => actual_error.unwrap_or_default(),
                     Error::NoFileSelected(actual_error) => actual_error.unwrap_or_default(),
                     Error::FailedToUpscaleImage(actual_error, _) => actual_error.unwrap_or_default(),
-                    Error::RealEsrganNotInPath(actual_error) => actual_error.unwrap_or_default(),
+                    Error::UpscaylNotInPath(actual_error) => actual_error.unwrap_or_default(),
                     Error::FailedToInitImage(actual_error, _, _) => actual_error.unwrap_or_default(),
                     Error::ImageFormatNotSupported(actual_error, _) => actual_error.unwrap_or_default(),
                 }
@@ -79,6 +84,7 @@ impl ToastsManager {
 #[derive(Default, Clone)]
 pub struct NotifierAPI {
     pub toasts: Arc<Mutex<ToastsManager>>,
+    pub loading_status: Arc<RwLock<Option<Loading>>>,
 }
 
 // Struct that brings an interface to manage toasts.
@@ -86,6 +92,7 @@ impl NotifierAPI {
     pub fn new() -> Self {
         Self {
             toasts: Arc::new(Mutex::new(ToastsManager::new())),
+            loading_status: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -93,6 +100,14 @@ impl NotifierAPI {
         if let Ok(mut toasts) = self.toasts.try_lock() {
             toasts.update(ctx);
         }
+    }
+
+    pub fn set_loading(&mut self, message: Option<String>) {
+        *self.loading_status.write().unwrap() = Some(Loading { message })
+    }
+
+    pub fn unset_loading(&mut self) {
+        *self.loading_status.write().unwrap() = None;
     }
 }
 

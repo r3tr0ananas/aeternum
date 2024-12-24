@@ -8,7 +8,7 @@ pub enum Error {
     FileNotFound(AE, PathBuf, String),
     NoFileSelected(AE),
     FailedToUpscaleImage(AE, String),
-    RealEsrganNotInPath(AE),
+    UpscaylNotInPath(AE),
     FailedToInitImage(AE, PathBuf, String),
     ImageFormatNotSupported(AE, String),
 }
@@ -46,8 +46,8 @@ impl Display for Error {
                 path.file_name().unwrap().to_string_lossy(),
                 reason
             ),
-            Error::RealEsrganNotInPath(..) => write!(
-                f, "Real-ESGRAN isn't in your path. Install it: https://github.com/xinntao/Real-ESRGAN"
+            Error::UpscaylNotInPath(..) => write!(
+                f, "upscayl-bin isn't in your path. Install it: https://github.com/upscayl/upscayl-ncnn"
             ),
             Error::ImageFormatNotSupported(_, image_format) => write!(
                 f, "The image format '{}' is not supported!", image_format

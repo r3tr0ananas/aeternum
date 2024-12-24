@@ -86,11 +86,11 @@ impl<'a> Aeternum<'a> {
 }
 
 impl eframe::App for Aeternum<'_> {
-
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.set_app_style(ctx);
 
         self.about_box.handle_input(ctx);
+        self.upscale.update();
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let window_rect = ctx.input(|i: &egui::InputState| i.screen_rect());
@@ -137,21 +137,21 @@ impl eframe::App for Aeternum<'_> {
                             )
                         )
                         .show(ui, |ui| {
-                            let rose_response = ui.add(
+                            let aeter_response = ui.add(
                                 egui::Image::new(files::get_aeternum_image())
                                     .max_width(image_width)
                                     .sense(egui::Sense::click())
                             );
 
-                            aeter_rect = rose_response.rect;
+                            aeter_rect = aeter_response.rect;
 
                             if file_is_hovering {
                                 ui.label("You're about to drop a file.");
                             }
 
-                            rose_response.clone().on_hover_cursor(CursorIcon::PointingHand);
+                            aeter_response.clone().on_hover_cursor(CursorIcon::PointingHand);
 
-                            if rose_response.clicked() {
+                            if aeter_response.clicked() {
                                 let image_result = files::select_image();
 
                                 match image_result {
@@ -202,7 +202,7 @@ impl eframe::App for Aeternum<'_> {
                     ui.label("Model");
 
                     egui::ComboBox::from_label("Select a model")
-                        .selected_text(format!("{:?}", &self.upscale.options.model.to_string()))
+                        .selected_text(format!("{}", &self.upscale.options.model.to_string()))
                         .show_ui(ui, |ui| {
                             for model in Models::iter() {
                                 ui.selectable_value(&mut self.upscale.options.model, model, model.to_string());
@@ -217,12 +217,36 @@ impl eframe::App for Aeternum<'_> {
 
                     ui.end_row();
 
-                    if ui.button("Upscale!").clicked() {
-                        let result = self.upscale.upscale(image);
+                    let upscale_button = ui.add_enabled(!self.upscale.upscaling, egui::Button::new("Upscale!"));
 
-                        println!("{:#?}", result);
+                    if upscale_button.clicked() {
+                        self.upscale.upscale(image, &mut self.notifier);
                     }
                 });
         });
+
+        egui::TopBottomPanel::bottom("status_bar")
+        .show_separator_line(false)
+        .frame(
+            Frame::none()
+                .outer_margin(Margin {left: 10.0, bottom: 7.0, ..Default::default()})
+        ).show(ctx, |ui| {
+            if let Ok(loading_status) = self.notifier.loading_status.try_read() {
+                if let Some(loading) = loading_status.as_ref() {
+                    ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
+                        ui.add(
+                            egui::Spinner::new()
+                                .color(Color32::from_hex("#e05f78").unwrap()) // NOTE: This should be the default accent colour.
+                                .size(20.0)
+                        );
+
+                        if let Some(message) = &loading.message {
+                            ui.label(message);
+                        }
+                    });
+                }
+            }
+        }
+    );
     }
 }

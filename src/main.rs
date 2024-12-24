@@ -56,7 +56,7 @@ fn main() -> eframe::Result {
     let theme_string = cli_args.theme;
 
     if image_path.is_some() {
-        debug!("Image '{}' loading from path...", &image_path.as_ref().unwrap());
+        debug!("Using image: '{}'", &image_path.as_ref().unwrap());
     }
 
     let image = match image_path {
