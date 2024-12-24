@@ -1,6 +1,6 @@
 <div align="center">
 
-  # <img src="./assets/image.png"> aeternum
+  # ∞ aeternum
   <sub>A simple and minimal upscaler built in rust (WIP)</sub>
 
   <!--Add preview-->
