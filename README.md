@@ -9,6 +9,10 @@
 > [!CAUTION]
 > This project is HEAVILY a work in progress. Github issues are very welcome. 🤝
 
+# What is Aeternum?
+Aeternum (lt.: "Eternal") is a simple, minimal but yet feature-rich image upscaler using [`upscayl-ncnn`](https://github.com/upscayl/upscayl-ncnn) as it's backend.
+Aeternum is built using [`rust`](https://www.rust-lang.org) and [`egui`](https://github.com/emilk/egui).
+
 # 🛠️ Installation
 WIP
 

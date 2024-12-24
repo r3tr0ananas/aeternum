@@ -1,4 +1,5 @@
 use std::{env, io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::Duration};
+use egui_notify::ToastLevel;
 use which::which;
 use std::process::Command;
 
@@ -43,12 +44,6 @@ impl Upscale {
         let tool_path = executable_path.with_file_name(tool_name);
 
         if tool_path.exists() {
-            let models_folder = executable_path.with_file_name("models");
-
-            if !models_folder.exists() {
-                return Err(Error::ModelsFolderNotFound(None, models_folder))
-            }
-
             return Ok(Self {
                 options: UpscaleOptions::default(),
                 upscaling: false,
@@ -78,10 +73,23 @@ impl Upscale {
         }
     }
 
-    pub fn init(&mut self) -> Result<(), Error> {
+    pub fn init(&mut self, custom_path: Option<String>) -> Result<(), Error> {
+        match custom_path {
+            Some(path) => {
+                let path = PathBuf::from(path);
+
+                if path.exists() {
+                    self.get_models(path.clone());
+                } else {
+                    return Err(Error::NoModels(Some("Custom folder doesn't exist.".to_string()), path))
+                }
+            },
+            None => {} 
+        }
+
         let models_folder = self.cli.with_file_name("models");
 
-        if !models_folder.exists() {
+        if !models_folder.exists() && self.models.is_empty() {
             return Err(Error::ModelsFolderNotFound(Some("Folder doesn't exist".to_string()), models_folder))
         }
 
@@ -123,6 +131,14 @@ impl Upscale {
                 path.extension().unwrap().to_string_lossy()
             )
         );
+
+        if out.exists() {
+            notifier.toasts.lock().unwrap()
+                .toast_and_log("Upscaled image already exists.".into(), ToastLevel::Info)
+                .duration(Some(Duration::from_secs(10)));
+
+            return;
+        }
 
         let path = path.clone();
         let cli = self.cli.clone();
@@ -167,8 +183,8 @@ impl Upscale {
                                         notifier_arc.set_loading(Some(format!("Processing: {}", output)));
                                     }
                                 },
-                                Err(e) => {
-                                    let error = Error::FailedToUpscaleImage(Some(e.to_string()), "Failed to read output".to_string());
+                                Err(error) => {
+                                    let error = Error::FailedToUpscaleImage(Some(error.to_string()), "Failed to read output".to_string());
                                     notifier_arc.toasts.lock().unwrap()
                                         .toast_and_log(error.into(), egui_notify::ToastLevel::Error)
                                         .duration(Some(Duration::from_secs(10)));
@@ -207,7 +223,7 @@ impl Upscale {
                         format!("{}.param", entry_path.file_stem().unwrap().to_string_lossy())
                     );
 
-                    if param_file.exists() {
+                    if param_file.exists() { // 
                         self.models.push(
                             Model {
                                 path: entry_path.clone(),

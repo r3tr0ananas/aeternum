@@ -11,6 +11,7 @@ use cirrus_theming::v1::Theme;
 use clap::{arg, command, Parser};
 use error::Error;
 
+use config::config::Config;
 use notifier::NotifierAPI;
 use upscale::Upscale;
 
@@ -21,6 +22,7 @@ mod image;
 mod windows;
 mod files;
 mod upscale;
+mod config;
 
 #[derive(Parser, Debug)]
 #[clap(author = "Ananas")]
@@ -108,6 +110,22 @@ fn main() -> eframe::Result {
         _ => Theme::default(true)
     };
 
+    let config = match Config::new() {
+        Ok(config) => config,
+        Err(error) => {
+
+            notifier.toasts.lock().unwrap().toast_and_log(
+                format!(
+                    "Error occurred getting aeternum's config file! \
+                    Defaulting to default config. Error: {}", error.to_string().as_str()
+                ).into(), 
+                ToastLevel::Error
+            ).duration(Some(Duration::from_secs(10)));
+
+            Config::default()
+        }
+    };
+
     let mut upscale = match Upscale::new() {
         Ok(upscale) => upscale,
         Err(error) => {
@@ -119,7 +137,12 @@ fn main() -> eframe::Result {
         }
     };
 
-    match upscale.init() {
+    let custom_models_folder = match &config.misc.custom_models_folder == "" {
+        true => None,
+        false => Some(config.misc.custom_models_folder.clone()),
+    };
+
+    match upscale.init(custom_models_folder) {
         Ok(_) => {},
         Err(error) => {
             notifier.toasts.lock().unwrap().toast_and_log(
@@ -135,7 +158,7 @@ fn main() -> eframe::Result {
         options,
         Box::new(|cc| {
             egui_extras::install_image_loaders(&cc.egui_ctx);
-            Ok(Box::new(Aeternum::new(image, theme, notifier, upscale)))
+            Ok(Box::new(Aeternum::new(image, theme, notifier, upscale, config)))
         }),
     )
 }

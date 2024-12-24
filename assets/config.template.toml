@@ -1,0 +1,8 @@
+version = 1
+
+[keybinds]
+about_box = "A"
+
+[misc]
+# Add custom models for upscaling.
+custom_models_folder = ""

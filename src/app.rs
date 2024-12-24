@@ -3,26 +3,28 @@ use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Mar
 use egui_notify::ToastLevel;
 use std::time::Duration;
 
-use crate::{files, notifier::NotifierAPI, upscale::Upscale, windows::about::AboutWindow, Image};
+use crate::{config::config::Config, files, notifier::NotifierAPI, upscale::Upscale, windows::about::AboutWindow, Image};
 
 pub struct Aeternum<'a> {
     theme: Theme,
     image: Option<Image>,
     about_box: AboutWindow<'a>,
     notifier: NotifierAPI,
-    upscale: Upscale
+    upscale: Upscale,
+    config: Config
 }
 
 impl<'a> Aeternum<'a> {
-    pub fn new(image: Option<Image>, theme: Theme, notifier: NotifierAPI, upscale: Upscale) -> Self {
-        let about_box = AboutWindow::new();
+    pub fn new(image: Option<Image>, theme: Theme, mut notifier: NotifierAPI, upscale: Upscale, config: Config) -> Self {
+        let about_box = AboutWindow::new(&config, &mut notifier);
 
         Self {
             image,
             theme,
             notifier,
             about_box,
-            upscale
+            upscale,
+            config
         }
     }
 

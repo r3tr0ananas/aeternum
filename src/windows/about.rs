@@ -1,7 +1,8 @@
 use cirrus_egui::v1::widgets::about::{authors_toml_to_about_authors, About, AboutApplicationInfo};
 use eframe::egui::{self, Key, Response, Vec2};
+use egui_notify::ToastLevel;
 
-use crate::files;
+use crate::{config::config::Config, files, notifier::NotifierAPI};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHORS: &str = include_str!("../../authors.toml");
@@ -9,11 +10,24 @@ const AUTHORS: &str = include_str!("../../authors.toml");
 pub struct AboutWindow<'a> {
     pub show: bool,
     about_widget: About<'a>,
+    toggle_key: Key,
     pub response: Option<Response>,
 }
 
 impl<'a> AboutWindow<'a> {
-    pub fn new() -> Self {
+    pub fn new(config: &Config, notifier: &mut NotifierAPI) -> Self {        
+        let config_key = match Key::from_name(&config.keybinds.about_box) {
+            Some(key) => key,
+            None => {
+                notifier.toasts.lock().unwrap().toast_and_log(
+                    "The key bind set for 'about_box' is invalid! Defaulting to `A`.".into(), 
+                    ToastLevel::Error
+                );
+
+                Key::A
+            },
+        };
+
         let about_app_info = AboutApplicationInfo {
             name: "Aeternum".to_string(),
             description: "A simple and minimal upscaler built in rust".to_string(),
@@ -32,12 +46,13 @@ impl<'a> AboutWindow<'a> {
         Self {
             show: false,
             about_widget,
+            toggle_key: config_key,
             response: None
         }
     }
 
     pub fn handle_input(&mut self, ctx: &egui::Context) {
-        if ctx.input(|i| i.key_pressed(Key::A)) {
+        if ctx.input(|i| i.key_pressed(self.toggle_key)) {
             if self.show == true {
                 self.show = false;
             } else {
