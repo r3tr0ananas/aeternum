@@ -39,7 +39,7 @@ At this stage, for development, you would just run ``cargo run``. If you would l
 ```sh
 cargo run
 ```
-To run Roseate in development with an image, append `--` and pass an image path after like so:
+To run Aeternum in development with an image, append `--` and pass an image path after like so:
 ```sh
 cargo run -- ./tsukasa.jpg
 ```
