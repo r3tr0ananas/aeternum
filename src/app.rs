@@ -273,15 +273,15 @@ impl eframe::App for Aeternum<'_> {
             if let Ok(loading_status) = self.notifier.loading_status.try_read() {
                 if let Some(loading) = loading_status.as_ref() {
                     ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
-                            ui.add(
-                                egui::Spinner::new()
-                                    .color(Color32::from_hex("#e05f78").unwrap()) // NOTE: This should be the default accent colour.
-                                    .size(20.0)
-                            );
+                        ui.add(
+                            egui::Spinner::new()
+                                .color(Color32::from_hex("#e05f78").unwrap()) // NOTE: This should be the default accent colour.
+                                .size(20.0)
+                        );
 
-                            if let Some(message) = &loading.message {
-                                ui.label(message);
-                            }
+                        if let Some(message) = &loading.message {
+                            ui.label(message);
+                        }
                     });
                 }
             }
