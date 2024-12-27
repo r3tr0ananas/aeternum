@@ -16,7 +16,9 @@ pub struct Model {
 #[derive(Clone)]
 pub struct UpscaleOptions {
     pub scale: i32,
+    pub compression: i32,
     pub model: Option<Model>,
+    pub output: Option<PathBuf>
 }
 
 pub struct Upscale {
@@ -32,7 +34,9 @@ impl Default for UpscaleOptions {
     fn default() -> Self {
         Self {
             scale: 4,
-            model: None
+            compression: 0,
+            model: None,
+            output: None
         }
     }
 }
@@ -122,22 +126,16 @@ impl Upscale {
 
         let path = &image.path;
 
-        let out = path.with_file_name(
-            format!(
-                "{}_{}_x{}.{}", 
-                path.file_stem().unwrap().to_string_lossy(), 
-                self.options.model.as_ref().unwrap().name, 
-                self.options.scale,
-                path.extension().unwrap().to_string_lossy()
-            )
-        );
+        let out = match &self.options.output {
+            Some(path) => path.clone(),
+            None => image.create_output(
+                &self.options.scale, 
+                self.options.model.as_ref().unwrap()
+            ),
+        };
 
         if out.exists() {
-            notifier.toasts.lock().unwrap()
-                .toast_and_log("Upscaled image already exists.".into(), ToastLevel::Info)
-                .duration(Some(Duration::from_secs(10)));
 
-            return;
         }
 
         let path = path.clone();
@@ -145,6 +143,9 @@ impl Upscale {
         let upscaling_arc = self.upscaling_arc.clone();
         let mut notifier_arc = notifier.clone();
         let options = self.options.clone();
+
+        let mut upscaling = self.upscaling_arc.lock().unwrap();
+        *upscaling = true;
 
         let upscale_stuff = move || {
             notifier_arc.set_loading(Some("Initializing command...".into()));
@@ -156,15 +157,17 @@ impl Upscale {
             let cmd = upscale_command
                 .args([
                     "-i",
-                    path.to_str().unwrap(),
+                    &path.to_string_lossy(),
                     "-o",
-                    out.to_str().unwrap(),
+                    &out.to_string_lossy(),
                     "-m",
                     &model.folder.to_string_lossy(),
                     "-n",
                     &model.name,
                     "-s",
-                    &options.scale.to_string()
+                    &options.scale.to_string(),
+                    "-c",
+                    &options.compression.to_string()
                 ])
                 .stderr(Stdio::piped()) // why do you output to stderr :woe: ~ Ananas
                 .spawn();
@@ -183,38 +186,63 @@ impl Upscale {
                                         notifier_arc.set_loading(Some(format!("Processing: {}", output)));
                                     }
                                 },
-                                Err(error) => {
-                                    let error = Error::FailedToUpscaleImage(Some(error.to_string()), "Failed to read output".to_string());
-                                    notifier_arc.toasts.lock().unwrap()
-                                        .toast_and_log(error.into(), egui_notify::ToastLevel::Error)
-                                        .duration(Some(Duration::from_secs(10)));
-                                },
+                                _ => {}
                             }
                         }
                     }
 
-                    let _ = child.wait_with_output();
+                    let status = child.wait_with_output();
+
+                    match status {
+                        Ok(status) => {
+                            if status.status.success() {
+                                notifier_arc.toasts.lock().unwrap()
+                                    .toast_and_log("Successfully upscaled image!".into(), ToastLevel::Success)
+                                    .duration(Some(Duration::from_secs(10)));
+
+                            } else {
+                                let error = Error::FailedToUpscaleImage(
+                                    None, 
+                                    "Process returned as not successful.".to_string()
+                                );
+                                notifier_arc.toasts.lock().unwrap()
+                                    .toast_and_log(error.into(), ToastLevel::Error)
+                                    .duration(Some(Duration::from_secs(10)));
+                            }
+                        },
+                        Err(error) => {
+                            let error = Error::FailedToUpscaleImage(
+                                Some(error.to_string()), 
+                                "Failed to wait for process.".to_string()
+                            );
+
+                            notifier_arc.toasts.lock().unwrap()
+                                .toast_and_log(error.into(), ToastLevel::Error)
+                                .duration(Some(Duration::from_secs(10)));
+                        }
+                    }
                 },
                 Err(error) => {
                     let error = Error::FailedToUpscaleImage(Some(error.to_string()), "Failed to spawn child process.".to_string());
 
                     notifier_arc.toasts.lock().unwrap()
-                        .toast_and_log(error.into(), egui_notify::ToastLevel::Error)
+                        .toast_and_log(error.into(), ToastLevel::Error)
                         .duration(Some(Duration::from_secs(10)));
                 }
             }
 
-            let mut upscaled = upscaling_arc.lock().unwrap();
-
-            *upscaled = true;
             notifier_arc.unset_loading();
+
+            let mut upscaling = upscaling_arc.lock().unwrap();
+            *upscaling = false;
         };
 
         thread::spawn(upscale_stuff);
     }
 
     fn get_models(&mut self, folder_path: PathBuf) {
-        let gl = format!("{}{}*.bin", folder_path.to_string_lossy(), std::path::MAIN_SEPARATOR_STR);
+        let glob_bin = folder_path.join("*.bin");
+        let gl = glob_bin.to_string_lossy();
 
         for entry in glob::glob(&gl).unwrap() {
             match entry {
@@ -223,7 +251,7 @@ impl Upscale {
                         format!("{}.param", entry_path.file_stem().unwrap().to_string_lossy())
                     );
 
-                    if param_file.exists() { // 
+                    if param_file.exists() {
                         self.models.push(
                             Model {
                                 path: entry_path.clone(),

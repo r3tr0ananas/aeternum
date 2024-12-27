@@ -30,6 +30,7 @@ serde = {workspace = true, features = ["derive"]}
 image = {version = "0.25.5", features = ["png", "jpeg", "webp"]}
 glob = "0.3.1"
 dirs = "5.0.1"
+imagesize = "0.13.0"
 
 [workspace.dependencies]
 cirrus_egui = { path = "./cirrus/egui" }

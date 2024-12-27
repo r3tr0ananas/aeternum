@@ -222,6 +222,38 @@ impl eframe::App for Aeternum<'_> {
                         Slider::new(&mut self.upscale.options.scale, 1..=16)
                     );
 
+                    let scale = self.upscale.options.scale;
+                    let width = image.image_size.width as i32;
+                    let height = image.image_size.height as i32;
+
+                    ui.label(format!("({}x{})", width * scale, height * scale));
+                    ui.end_row();
+
+                    ui.label("Compression");
+                    ui.add(
+                        Slider::new(&mut self.upscale.options.compression, 1..=100)
+                    );
+
+                    ui.end_row();
+
+                    ui.label("Output file");
+
+                    let output_button = match &self.upscale.options.output {
+                        Some(path) => ui.button(path.to_str().unwrap()),
+                        None => ui.button("Select output")
+                    };
+
+                    if output_button.clicked() {
+                        match files::save_image(&image, &self.upscale.options) {
+                            Ok(output) => self.upscale.options.output = Some(output),
+                            Err(error) => {
+                                self.notifier.toasts.lock().unwrap()
+                                    .toast_and_log(error.into(), ToastLevel::Error)
+                                    .duration(Some(Duration::from_secs(5)));
+                            }
+                        }
+                    }
+
                     ui.end_row();
 
                     let upscale_button = ui.add_enabled(!self.upscale.upscaling, egui::Button::new("Upscale!"));
@@ -241,19 +273,18 @@ impl eframe::App for Aeternum<'_> {
             if let Ok(loading_status) = self.notifier.loading_status.try_read() {
                 if let Some(loading) = loading_status.as_ref() {
                     ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
-                        ui.add(
-                            egui::Spinner::new()
-                                .color(Color32::from_hex("#e05f78").unwrap()) // NOTE: This should be the default accent colour.
-                                .size(20.0)
-                        );
+                            ui.add(
+                                egui::Spinner::new()
+                                    .color(Color32::from_hex("#e05f78").unwrap()) // NOTE: This should be the default accent colour.
+                                    .size(20.0)
+                            );
 
-                        if let Some(message) = &loading.message {
-                            ui.label(message);
-                        }
+                            if let Some(message) = &loading.message {
+                                ui.label(message);
+                            }
                     });
                 }
             }
-        }
-    );
+        });
     }
 }
