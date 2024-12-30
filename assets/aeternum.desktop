@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Aeternum
+GenericName=Image Upscaler
+Comment=A simple and minimal upscaler.
+Exec=aeternum %f
+Icon=aeternum
+Terminal=false
+Categories=Rust;Graphics;Upscale;
+MimeType=image/jpeg;image/png;image/webp;
+Keywords=image;upscaler;aeternum;picture;upscale;jpeg;

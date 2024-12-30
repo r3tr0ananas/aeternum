@@ -10,8 +10,7 @@ pub struct Aeternum<'a> {
     image: Option<Image>,
     about_box: AboutWindow<'a>,
     notifier: NotifierAPI,
-    upscale: Upscale,
-    config: Config
+    upscale: Upscale
 }
 
 impl<'a> Aeternum<'a> {
@@ -23,8 +22,7 @@ impl<'a> Aeternum<'a> {
             theme,
             notifier,
             about_box,
-            upscale,
-            config
+            upscale
         }
     }
 
@@ -58,10 +56,7 @@ impl<'a> Aeternum<'a> {
         // Text styling.
         custom_style.visuals.override_text_color = Some(
             Color32::from_hex(
-                match self.theme.is_dark {
-                    true => "#b5b5b5",
-                    false => "#3b3b3b"
-                }
+                &self.theme.text_colour.hex_code
             ).unwrap()
         );
 
@@ -114,8 +109,8 @@ impl eframe::App for Aeternum<'_> {
                             .as_ref()
                             .unwrap();
 
-                        let image = match Image::from_path(path.clone()) {
-                            Ok(value) => value,
+                        match Image::from_path(path.clone()) {
+                            Ok(image) => self.image = Some(image),
                             Err(error) => {
                                 self.notifier.toasts.lock().unwrap().toast_and_log(
                                     error.into(), ToastLevel::Error
@@ -123,8 +118,6 @@ impl eframe::App for Aeternum<'_> {
                                 return;
                             }
                         };
-
-                        self.image = Some(image);
                     }
                 });
 
@@ -160,9 +153,7 @@ impl eframe::App for Aeternum<'_> {
                                 let image_result = files::select_image();
 
                                 match image_result {
-                                    Ok(image) => {
-                                        self.image = Some(image);
-                                    },
+                                    Ok(image) => self.image = Some(image),
                                     Err(error) => {
                                         self.notifier.toasts.lock().unwrap()
                                             .toast_and_log(error.into(), ToastLevel::Error)
@@ -195,9 +186,8 @@ impl eframe::App for Aeternum<'_> {
             }
 
             let image = self.image.as_ref().unwrap();
-            
             let side_panel_size = 240.0;
-            
+
             egui::SidePanel::left("options_panel")
                 .show_separator_line(false)
                 .exact_width(side_panel_size)
@@ -208,12 +198,12 @@ impl eframe::App for Aeternum<'_> {
                             .show(ui, |ui| {
                             ui.vertical_centered_justified(|ui| {
                                 ui.label("Model");
-        
+
                                 let selected = match &self.upscale.options.model {
                                     Some(model) => model.name.clone(),
                                     None => "Select a Model".to_string(),
                                 };
-    
+
                                 ui.vertical_centered(|ui| {
                                     egui::ComboBox::from_id_salt("select_model")
                                         .selected_text(selected)
@@ -230,17 +220,17 @@ impl eframe::App for Aeternum<'_> {
                                 });
                             });
                             ui.end_row();
-                            
+
                             ui.vertical_centered_justified(|ui| {
                                 ui.label("Scale");
                                 ui.add(
                                     Slider::new(&mut self.upscale.options.scale, 1..=16)
                                 );
-            
+
                                 let scale = self.upscale.options.scale;
                                 let width = image.image_size.width as i32;
                                 let height = image.image_size.height as i32;
-            
+
                                 ui.label(format!("({}x{})", width * scale, height * scale));
                             });
                             ui.end_row();
@@ -256,7 +246,6 @@ impl eframe::App for Aeternum<'_> {
                             ui.vertical_centered_justified(|ui| {
                                 ui.label("Output file");
 
-        
                                 let output_button = match &self.upscale.options.output {
                                     Some(path) => ui.button(path.to_str().unwrap()),
                                     None => {
@@ -268,7 +257,7 @@ impl eframe::App for Aeternum<'_> {
                                         ).on_disabled_hover_text("Select a model before setting the output file.")
                                     }
                                 };
-    
+
                                 if output_button.clicked() {
                                     match files::save_image(&image, &self.upscale.options) {
                                         Ok(output) => self.upscale.options.output = Some(output),
@@ -281,14 +270,13 @@ impl eframe::App for Aeternum<'_> {
                                 }
                             });
                             ui.end_row();
-        
+
                             let upscale_button_enabled = !self.upscale.upscaling && self.upscale.options.model.is_some();
                             ui.vertical_centered_justified(|ui| {
                                 let upscale_button = ui.add_enabled(
                                     upscale_button_enabled, 
                                     egui::Button::new(RichText::new("Upscale").size(20.0))
                                         .min_size([50.0, 60.0].into())
-                            
                                 ).on_disabled_hover_text("Currently upscaling or no model selected.");
             
                                 if upscale_button.clicked() {
@@ -311,7 +299,7 @@ impl eframe::App for Aeternum<'_> {
                             .max_width(ui.available_width())
                     )
                 });
-            
+
             ctx.request_repaint_after_secs(1.0);
         });
 
@@ -348,7 +336,6 @@ impl eframe::App for Aeternum<'_> {
                 if let Ok(loading_status) = self.notifier.loading_status.try_read() {
                     if let Some(loading) = loading_status.as_ref() {
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-
                             if let Some(message) = &loading.message {
                                 ui.label(message);
                             }
