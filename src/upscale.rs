@@ -1,4 +1,4 @@
-use std::{env, io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::Duration};
+use std::{env, io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::{Duration, Instant}};
 use egui_notify::ToastLevel;
 use which::which;
 use std::process::Command;
@@ -103,10 +103,6 @@ impl Upscale {
             return Err(Error::NoModels(Some("Vector is empty.".to_string()), models_folder))
         }
 
-        self.options.model = Some(
-            self.models.first().unwrap().clone()
-        );
-
         Ok(())
     }
 
@@ -115,14 +111,18 @@ impl Upscale {
             self.upscaling = value.clone();
         }
     }
+
+    pub fn reset_options(&mut self) {
+        self.options = UpscaleOptions::default();
+    }
     
-    fn reset(&mut self) {
+    fn upscaling_reset(&mut self) {
         self.upscaling = false;
         self.upscaling_arc = Arc::new(false.into());
     }
 
     pub fn upscale(&mut self, image: Image, notifier: &mut NotifierAPI) {
-        self.reset();
+        self.upscaling_reset();
 
         let path = &image.path;
 
@@ -135,7 +135,11 @@ impl Upscale {
         };
 
         if out.exists() {
+            notifier.toasts.lock().unwrap()
+                .toast_and_log("Image already exists!".into(), ToastLevel::Info)
+                .duration(Some(Duration::from_secs(10)));
 
+            return;
         }
 
         let path = path.clone();
@@ -148,6 +152,8 @@ impl Upscale {
         *upscaling = true;
 
         let upscale_stuff = move || {
+            let now = Instant::now();
+
             notifier_arc.set_loading(Some("Initializing command...".into()));
 
             let mut upscale_command = Command::new(cli.to_string_lossy().to_string());
@@ -196,10 +202,11 @@ impl Upscale {
                     match status {
                         Ok(status) => {
                             if status.status.success() {
-                                notifier_arc.toasts.lock().unwrap()
-                                    .toast_and_log("Successfully upscaled image!".into(), ToastLevel::Success)
-                                    .duration(Some(Duration::from_secs(10)));
+                                let upscale_time = now.elapsed().as_secs();
 
+                                notifier_arc.toasts.lock().unwrap()
+                                    .toast_and_log(format!("Successfully upscaled image in {} seconds!", upscale_time).into(), ToastLevel::Success)
+                                    .duration(Some(Duration::from_secs(10)));
                             } else {
                                 let error = Error::FailedToUpscaleImage(
                                     None, 
