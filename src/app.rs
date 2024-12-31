@@ -70,7 +70,7 @@ impl<'a> Aeternum<'a> {
     fn draw_dotted_line(&self, ui: &egui::Painter, pos: &[egui::Pos2]) {
         ui.add(
             egui::Shape::dashed_line(
-                pos, 
+                pos,
                 Stroke {
                     width: 2.0,
                     color: Color32::from_hex(
@@ -78,7 +78,7 @@ impl<'a> Aeternum<'a> {
                             .unwrap_or(&Colour {hex_code: "e05f78".into()}).hex_code
                     ).unwrap()
                 },
-                10.0, 
+                10.0,
                 10.0
             )
         );
@@ -130,7 +130,7 @@ impl eframe::App for Aeternum<'_> {
                     egui::Frame::default()
                         .outer_margin(
                             Margin::symmetric(
-                                (window_rect.width() / 2.0) - image_width / 2.0, 
+                                (window_rect.width() / 2.0) - image_width / 2.0,
                                 (window_rect.height() / 2.0) - image_width / 2.0
                             )
                         )
@@ -193,7 +193,7 @@ impl eframe::App for Aeternum<'_> {
                 .exact_width(side_panel_size)
                 .resizable(false)
                 .show(ctx, |ui| {
-                        egui::Grid::new("options_grid") 
+                        egui::Grid::new("options_grid")
                             .spacing([20.0, 45.0])
                             .show(ui, |ui| {
                             ui.vertical_centered_justified(|ui| {
@@ -211,8 +211,8 @@ impl eframe::App for Aeternum<'_> {
                                         .show_ui(ui, |ui| {
                                             for model in self.upscale.models.iter() {
                                                 ui.selectable_value(
-                                                    &mut self.upscale.options.model, 
-                                                    Some(model.clone()), 
+                                                    &mut self.upscale.options.model,
+                                                    Some(model.clone()),
                                                     model.name.to_string()
                                                 );
                                             }
@@ -252,7 +252,7 @@ impl eframe::App for Aeternum<'_> {
                                         let model = self.upscale.options.model.is_some();
 
                                         ui.add_enabled(
-                                            model, 
+                                            model,
                                             egui::Button::new("Select output")
                                         ).on_disabled_hover_text("Select a model before setting the output file.")
                                     }
@@ -271,14 +271,19 @@ impl eframe::App for Aeternum<'_> {
                             });
                             ui.end_row();
 
-                            let upscale_button_enabled = !self.upscale.upscaling && self.upscale.options.model.is_some();
+                            let (button_enabled, disabled_text) = match (self.upscale.upscaling, self.upscale.options.model.is_some()) {
+                                (_, false) => (false, "No model selected."),
+                                (true, _) => (false, "Currently upscaling."),
+                                _ => (true, "")
+                            };
+
                             ui.vertical_centered_justified(|ui| {
                                 let upscale_button = ui.add_enabled(
-                                    upscale_button_enabled, 
+                                    button_enabled,
                                     egui::Button::new(RichText::new("Upscale").size(20.0))
                                         .min_size([50.0, 60.0].into())
-                                ).on_disabled_hover_text("Currently upscaling or no model selected.");
-            
+                                ).on_disabled_hover_text(disabled_text);
+
                                 if upscale_button.clicked() {
                                     self.upscale.upscale(image.clone(), &mut self.notifier);
                                 }
