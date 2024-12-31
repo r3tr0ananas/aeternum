@@ -26,7 +26,7 @@ pub struct Upscale {
     pub upscaling: bool,
     pub models: Vec<Model>,
 
-    cli: PathBuf,
+    cli_path: PathBuf,
     upscaling_arc: Arc<Mutex<bool>>
 }
 
@@ -53,7 +53,7 @@ impl Upscale {
                 upscaling: false,
                 models: Vec::new(),
 
-                cli: tool_path,
+                cli_path: tool_path,
                 upscaling_arc: Arc::new(false.into())
             })
         }
@@ -65,7 +65,7 @@ impl Upscale {
                     upscaling: false,
                     models: Vec::new(),
 
-                    cli: path,
+                    cli_path: path,
                     upscaling_arc: Arc::new(false.into())
                 })
             },
@@ -88,10 +88,12 @@ impl Upscale {
                     return Err(Error::NoModels(Some("Custom folder doesn't exist.".to_string()), path))
                 }
             },
-            None => {} 
+            None => {}
         }
 
-        let models_folder = self.cli.with_file_name("models");
+        let models_folder = PathBuf::from("/usr/lib/upscayl/models"); // NOTE: TEMPORARY SOLUTION!
+        // NOTE: Also cross-platform support thrown out the window here.
+        // TODO: Figure out a solution for windows support, possibly?
 
         if !models_folder.exists() && self.models.is_empty() {
             return Err(Error::ModelsFolderNotFound(Some("Folder doesn't exist".to_string()), models_folder))
@@ -143,7 +145,7 @@ impl Upscale {
         }
 
         let path = path.clone();
-        let cli = self.cli.clone();
+        let cli_path = self.cli_path.clone();
         let upscaling_arc = self.upscaling_arc.clone();
         let mut notifier_arc = notifier.clone();
         let options = self.options.clone();
@@ -156,7 +158,7 @@ impl Upscale {
 
             notifier_arc.set_loading(Some("Initializing command...".into()));
 
-            let mut upscale_command = Command::new(cli.to_string_lossy().to_string());
+            let mut upscale_command = Command::new(cli_path.to_string_lossy().to_string());
 
             let model = &options.model.unwrap();
 
