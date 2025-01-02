@@ -9,7 +9,6 @@ authors = ["Ananas <ananas@ananas.moe>"]
 license = "GPL-3.0"
 repository = "https://github.com/cloudy-org/aeternum/"
 rust-version = "1.81"
-feature = "package"
 
 [dependencies]
 cirrus_egui = {workspace = true}
