@@ -9,6 +9,7 @@ authors = ["Ananas <ananas@ananas.moe>"]
 license = "GPL-3.0"
 repository = "https://github.com/cloudy-org/aeternum/"
 rust-version = "1.81"
+feature = "package"
 
 [dependencies]
 cirrus_egui = {workspace = true}
@@ -39,3 +40,6 @@ cirrus_theming = { path = "./cirrus/theming" }
 egui = "0.29.1"
 toml = "0.8.19"
 serde = {version = "1.0.215", features = ["derive"]}
+
+[features]
+package = []

@@ -1,6 +1,5 @@
-use std::{env, io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::{Duration, Instant}};
+use std::{io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::{Duration, Instant}};
 use egui_notify::ToastLevel;
-use which::which;
 use std::process::Command;
 
 use crate::{error::Error, image::Image, notifier::NotifierAPI};
@@ -26,6 +25,7 @@ pub struct Upscale {
     pub upscaling: bool,
     pub models: Vec<Model>,
 
+    models_folder: PathBuf,
     cli_path: PathBuf,
     upscaling_arc: Arc<Mutex<bool>>
 }
@@ -42,29 +42,55 @@ impl Default for UpscaleOptions {
 }
 
 impl Upscale {
+    #[cfg(feature = "package")]
     pub fn new() -> Result<Self, Error> {
-        let tool_name = "upscayl-bin";
-        let executable_path = env::current_exe().expect("Failed to get the current executable's path");
-        let tool_path = executable_path.with_file_name(tool_name);
+        use std::env;
+
+        let executable_path = match env::current_exe() {
+            Ok(path) => path,
+            Err(error) => return Err(Error::FailedToGetCurrentExecutablePath(Some(error.to_string())))
+        };
+        let tool_path = executable_path.with_file_name("upscayl-bin");
 
         if tool_path.exists() {
-            return Ok(Self {
-                options: UpscaleOptions::default(),
-                upscaling: false,
-                models: Vec::new(),
+            let models_folder = executable_path.with_file_name("models");
 
-                cli_path: tool_path,
-                upscaling_arc: Arc::new(false.into())
-            })
+            if models_folder.exists() {
+                return Ok(Self {
+                    options: UpscaleOptions::default(),
+                    upscaling: false,
+                    models: Vec::new(),
+
+                    models_folder,
+                    cli_path: tool_path,
+                    upscaling_arc: Arc::new(false.into())
+                })
+            } else {
+                return Err(Error::ModelsFolderNotFound(Some("Folder does not exist.".to_string()), models_folder))
+            }
+        } else {
+            return Err(Error::UpscaylNotInPath(Some("upscayl-bin is not with the aeternum executable.".to_string())))
         }
+    }
 
-        match which(tool_name) {
+    #[cfg(not(feature = "package"))] // NOTE: This only works on linux.
+    pub fn new() -> Result<Self, Error> {
+        use which::which;
+
+        match which("upscayl-bin") {
             Ok(path) => {
+                let models_folder = PathBuf::from("/usr/lib/upscayl/models");
+
+                if !models_folder.exists() {
+                    return Err(Error::ModelsFolderNotFound(Some("Folder doesn't exist".to_string()), models_folder))
+                }
+
                 Ok(Self {
                     options: UpscaleOptions::default(),
                     upscaling: false,
                     models: Vec::new(),
 
+                    models_folder,
                     cli_path: path,
                     upscaling_arc: Arc::new(false.into())
                 })
@@ -83,7 +109,7 @@ impl Upscale {
                 let path = PathBuf::from(path);
 
                 if path.exists() {
-                    self.get_models(path.clone());
+                    self.get_models(path);
                 } else {
                     return Err(Error::NoModels(Some("Custom folder doesn't exist.".to_string()), path))
                 }
@@ -91,18 +117,10 @@ impl Upscale {
             None => {}
         }
 
-        let models_folder = PathBuf::from("/usr/lib/upscayl/models"); // NOTE: TEMPORARY SOLUTION!
-        // NOTE: Also cross-platform support thrown out the window here.
-        // TODO: Figure out a solution for windows support, possibly?
-
-        if !models_folder.exists() && self.models.is_empty() {
-            return Err(Error::ModelsFolderNotFound(Some("Folder doesn't exist".to_string()), models_folder))
-        }
-
-        self.get_models(models_folder.clone());
+        self.get_models(self.models_folder.clone());
 
         if self.models.is_empty() {
-            return Err(Error::NoModels(Some("Vector is empty.".to_string()), models_folder))
+            return Err(Error::NoModels(Some("Vector is empty.".to_string()), self.models_folder.clone()))
         }
 
         Ok(())
@@ -117,7 +135,7 @@ impl Upscale {
     pub fn reset_options(&mut self) {
         self.options = UpscaleOptions::default();
     }
-    
+
     fn upscaling_reset(&mut self) {
         self.upscaling = false;
         self.upscaling_arc = Arc::new(false.into());
@@ -131,7 +149,7 @@ impl Upscale {
         let out = match &self.options.output {
             Some(path) => path.clone(),
             None => image.create_output(
-                &self.options.scale, 
+                &self.options.scale,
                 self.options.model.as_ref().unwrap()
             ),
         };
@@ -184,7 +202,7 @@ impl Upscale {
                 Ok(mut child) => {
                     if let Some(stderr) = child.stderr.take() {
                         let reader = BufReader::new(stderr);
-                
+
                         for line in reader.lines() {
                             match line {
                                 Ok(output) => {
@@ -211,7 +229,7 @@ impl Upscale {
                                     .duration(Some(Duration::from_secs(10)));
                             } else {
                                 let error = Error::FailedToUpscaleImage(
-                                    None, 
+                                    None,
                                     "Process returned as not successful.".to_string()
                                 );
                                 notifier_arc.toasts.lock().unwrap()
@@ -221,7 +239,7 @@ impl Upscale {
                         },
                         Err(error) => {
                             let error = Error::FailedToUpscaleImage(
-                                Some(error.to_string()), 
+                                Some(error.to_string()),
                                 "Failed to wait for process.".to_string()
                             );
 

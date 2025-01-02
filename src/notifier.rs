@@ -76,6 +76,7 @@ impl ToastsManager {
                     Error::ImageFormatNotSupported(actual_error, _) => actual_error.unwrap_or_default(),
                     Error::ModelsFolderNotFound(actual_error, _) => actual_error.unwrap_or_default(),
                     Error::NoModels(actual_error, _) => actual_error.unwrap_or_default(),
+                    Error::FailedToGetCurrentExecutablePath(actual_error) => actual_error.unwrap_or_default()
                 }
             },
             StringOrError::String(string) => string,

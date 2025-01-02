@@ -13,6 +13,7 @@ pub enum Error {
     NoModels(AE, PathBuf),
     FailedToInitImage(AE, PathBuf, String),
     ImageFormatNotSupported(AE, String),
+    FailedToGetCurrentExecutablePath(AE)
 }
 
 impl Error {
@@ -59,6 +60,9 @@ impl Display for Error {
             ),
             Error::ImageFormatNotSupported(_, image_format) => write!(
                 f, "The image format '{}' is not supported!", image_format
+            ),
+            Error::FailedToGetCurrentExecutablePath(_) => write!(
+                f, "Failed to get the current path where aeternum is located."
             ),
         }
     }
