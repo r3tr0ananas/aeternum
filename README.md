@@ -3,7 +3,9 @@
   # ∞ aeternum
   <sub>A simple and minimal upscaler built in rust (WIP)</sub>
 
-  <!--Add preview-->
+  <img src="./assets/dev_preview.png">
+
+  <sub>(Image from a **WIP** development build, the final product may differ.)</sub>
 </div>
 
 > [!CAUTION]
@@ -18,7 +20,7 @@ WIP
 
 ## 🏗 Build from source
 ### Prerequisites:
-- [Rust](https://www.rust-lang.org/tools/install) and Cargo (Rust **`1.80.0`**+ is required!).
+- [Rust](https://www.rust-lang.org/tools/install) and Cargo (Rust **`1.81.0`**+ is required!).
 - [upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn)
 
 - Linux dependecies for [eframe](https://crates.io/crates/eframe):
