@@ -52,25 +52,25 @@ impl Upscale {
         };
         let tool_path = executable_path.with_file_name("upscayl-bin");
 
-        if tool_path.exists() {
-            let models_folder = executable_path.with_file_name("models");
-
-            if models_folder.exists() {
-                return Ok(Self {
-                    options: UpscaleOptions::default(),
-                    upscaling: false,
-                    models: Vec::new(),
-
-                    models_folder,
-                    cli_path: tool_path,
-                    upscaling_arc: Arc::new(false.into())
-                })
-            } else {
-                return Err(Error::ModelsFolderNotFound(Some("Folder does not exist.".to_string()), models_folder))
-            }
-        } else {
+        if !tool_path.exists() {
             return Err(Error::UpscaylNotInPath(Some("upscayl-bin is not with the aeternum executable.".to_string())))
         }
+
+        let models_folder = executable_path.with_file_name("models");
+
+        if !models_folder.exists() {
+            return Err(Error::ModelsFolderNotFound(Some("Folder does not exist.".to_string()), models_folder))
+        }
+
+        return Ok(Self {
+            options: UpscaleOptions::default(),
+            upscaling: false,
+            models: Vec::new(),
+
+            models_folder,
+            cli_path: tool_path,
+            upscaling_arc: Arc::new(false.into())
+        })
     }
 
     #[cfg(not(feature = "package"))] // NOTE: This only works on linux.
