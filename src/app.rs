@@ -1,5 +1,5 @@
 use cirrus_theming::v1::{Colour, Theme};
-use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Id, Layout, Margin, Rect, RichText, Shadow, Slider, Stroke, Style, TextStyle, Vec2};
+use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Stroke, Vec2};
 use egui_notify::ToastLevel;
 use std::time::Duration;
 
