@@ -3,7 +3,7 @@
   # ∞ aeternum
   <sub>A simple and minimal upscaler built in rust (WIP)</sub>
 
-  <img src="./assets/dev_preview.png">
+  <img src="./assets/dev_preview_2.png">
 
   <sub>(Image from a **WIP** development build, the final product may differ.)</sub>
 </div>
