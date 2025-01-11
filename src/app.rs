@@ -26,47 +26,6 @@ impl<'a> Aeternum<'a> {
         }
     }
 
-    fn set_app_style(&self, ctx: &Context) {
-        let mut custom_style = Style {
-            override_text_style: Some(TextStyle::Monospace),
-            ..Default::default()
-        };
-
-        custom_style.visuals.panel_fill = Color32::from_hex(
-            &self.theme.primary_colour.hex_code
-        ).unwrap();
-
-        // Window styling.
-        custom_style.visuals.window_highlight_topmost = false;
-
-        custom_style.visuals.window_fill = Color32::from_hex(
-            &self.theme.secondary_colour.hex_code
-        ).unwrap();
-        custom_style.visuals.window_stroke = Stroke::new(
-            1.0,
-            Color32::from_hex(&self.theme.third_colour.hex_code).unwrap()
-        );
-        custom_style.visuals.window_shadow = Shadow::NONE;
-
-        custom_style.visuals.widgets.inactive.bg_fill =
-            Color32::from_hex(
-                &self.theme.primary_colour.hex_code
-            ).unwrap();
-
-        // Text styling.
-        custom_style.visuals.override_text_color = Some(
-            Color32::from_hex(
-                &self.theme.text_colour.hex_code
-            ).unwrap()
-        );
-
-        custom_style.visuals.slider_trailing_fill = true;
-
-        custom_style.spacing.slider_width = 180.0;
-
-        ctx.set_style(custom_style);
-    }
-
     fn draw_dotted_line(&self, ui: &egui::Painter, pos: &[egui::Pos2]) {
         ui.add(
             egui::Shape::dashed_line(
@@ -87,8 +46,6 @@ impl<'a> Aeternum<'a> {
 
 impl eframe::App for Aeternum<'_> {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        self.set_app_style(ctx);
-
         self.about_box.handle_input(ctx);
         self.upscale.update();
 

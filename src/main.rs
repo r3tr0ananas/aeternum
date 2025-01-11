@@ -5,9 +5,10 @@ use std::{env, path::PathBuf, time::Duration};
 use app::Aeternum;
 use image::Image;
 use log::debug;
-use eframe::egui;
+use eframe::egui::{self, Style};
 use egui_notify::ToastLevel;
 use cirrus_theming::v1::Theme;
+use cirrus_egui::v1::styling::Styling;
 use clap::{arg, command, Parser};
 use error::Error;
 
@@ -158,6 +159,16 @@ fn main() -> eframe::Result {
         options,
         Box::new(|cc| {
             egui_extras::install_image_loaders(&cc.egui_ctx);
+
+            let mut custom_style = Style {..Default::default()};
+
+            custom_style.visuals.slider_trailing_fill = true;
+            custom_style.spacing.slider_width = 180.0;
+
+            Styling::new(&theme, Some(custom_style))
+                .set_all()
+                .apply(&cc.egui_ctx);
+
             Ok(Box::new(Aeternum::new(image, theme, notifier, upscale, config)))
         }),
     )
