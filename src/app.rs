@@ -189,13 +189,13 @@ impl eframe::App for Aeternum<'_> {
             let side_panel_size = 240.0;
 
             egui::SidePanel::left("options_panel")
-                .show_separator_line(false)
+                .show_separator_line(true)
                 .exact_width(side_panel_size)
                 .resizable(false)
                 .show(ctx, |ui| {
-                        egui::Grid::new("options_grid")
-                            .spacing([20.0, 45.0])
-                            .show(ui, |ui| {
+                    egui::Grid::new("options_grid")
+                        .spacing([20.0, 45.0])
+                        .show(ui, |ui| {
                             ui.vertical_centered_justified(|ui| {
                                 ui.label("Model");
 
@@ -289,20 +289,22 @@ impl eframe::App for Aeternum<'_> {
                                 }
                             });
                         });
-                    });
+                });
 
-            let area_width = (window_rect.width() / 2.0) - side_panel_size / 2.5;
-            let area_height = (window_rect.height() / 2.0) - side_panel_size / 2.0;
-
-            egui::Area::new(Id::new("image_area"))
-                .fixed_pos([area_width, area_height])
+            egui::CentralPanel::default()
                 .show(ctx, |ui| {
                     let image_path = format!("file://{}", image.path.to_string_lossy());
-                    ui.add(
-                        egui::Image::from_uri(image_path)
-                            .rounding(4.0)
-                            .max_width(ui.available_width())
-                    )
+
+                    ui.centered_and_justified(|ui| {
+                        ui.add(
+                            egui::Image::from_uri(image_path)
+                                .rounding(4.0)
+                                .shrink_to_fit()
+                                .max_size(
+                                    [image.image_size.width as f32, image.image_size.height as f32].into()
+                                )
+                        )
+                    });
                 });
 
             ctx.request_repaint_after_secs(1.0);

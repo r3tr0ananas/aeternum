@@ -15,7 +15,7 @@ impl Image {
         if let Some(extension) = path.extension() {
             let allowed_extensions = vec!["png", "jpeg", "jpg", "webp"];
             let extension_string = extension.to_string_lossy().to_string();
-    
+
             match allowed_extensions.iter().any(|e| extension_string.contains(e)) {
                 true => {
                     let image_size = match imagesize::size(&path) {
@@ -28,7 +28,7 @@ impl Image {
                             )
                         )
                     };
-    
+
                     Ok(Self {
                         path,
                         image_size
