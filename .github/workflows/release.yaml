@@ -40,9 +40,7 @@ jobs:
 
       - name: download and unzip upscayl-ncnn
         run: |
-          curl -o upscayl.zip \ 
-            https://github.com/upscayl/upscayl-ncnn/releases/download/20240601-103425 \
-            /upscayl-bin-20240601-103425-${{ steps.os_lower.outputs.lowercase }}.zip
+          curl -o upscayl.zip https://github.com/upscayl/upscayl-ncnn/releases/download/20240601-103425/upscayl-bin-20240601-103425-${{ steps.os_lower.outputs.lowercase }}.zip
           
           7z x upscayl.zip
 
