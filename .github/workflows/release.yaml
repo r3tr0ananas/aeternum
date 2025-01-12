@@ -49,21 +49,23 @@ jobs:
 
       - name: unzip upscayl
         run: 7z x ${{ steps.os_lower.outputs.lowercase }}
-      
-      - id: bin
-        run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            echo "upscayl-bin=./${{ steps.os_lower.outputs.lowercase }}/upscayl-bin.exe" >> $GITHUB_OUTPUT
-          else
-            echo "upscayl-bin=./${{ steps.os_lower.outputs.lowercase }}/upscayl-bin" >> $GITHUB_OUTPUT
-          fi
-      
 
-      - uses: taiki-e/upload-rust-binary-action@v1
+      - if: runner.os == 'Windows'
+        uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: aeternum
           target: ${{ matrix.target }}
-          include: ./assets/models,LICENSE,${{ steps.bin.outputs.upscayl-bin }}
+          include: ./assets/models,LICENSE,./${{ steps.os_lower.outputs.lowercase }}/upscayl-bin.exe
+          tar: unix
+          zip: windows
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - if: runner.os != 'Windows'
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: aeternum
+          target: ${{ matrix.target }}
+          include: ./assets/models,LICENSE,./${{ steps.os_lower.outputs.lowercase }}/upscayl-bin
           tar: unix
           zip: windows
           token: ${{ secrets.GITHUB_TOKEN }}
