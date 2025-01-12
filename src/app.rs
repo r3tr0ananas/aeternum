@@ -150,7 +150,8 @@ impl eframe::App for Aeternum<'_> {
                 .exact_width(side_panel_size)
                 .resizable(false)
                 .show(ctx, |ui| {
-                    egui::Grid::new("options_grid")
+                    ui.add_enabled_ui(!self.upscale.upscaling, |ui| {
+                        egui::Grid::new("options_grid")
                         .spacing([20.0, 45.0])
                         .show(ui, |ui| {
                             ui.vertical_centered_justified(|ui| {
@@ -228,10 +229,9 @@ impl eframe::App for Aeternum<'_> {
                             });
                             ui.end_row();
 
-                            let (button_enabled, disabled_text) = match (self.upscale.upscaling, self.upscale.options.model.is_some()) {
-                                (_, false) => (false, "No model selected."),
-                                (true, _) => (false, "Currently upscaling."),
-                                _ => (true, "")
+                            let (button_enabled, disabled_text) = match self.upscale.options.model.is_some() {
+                                false => (false, "No model selected."),
+                                true => (true, "")
                             };
 
                             ui.vertical_centered_justified(|ui| {
@@ -246,6 +246,8 @@ impl eframe::App for Aeternum<'_> {
                                 }
                             });
                         });
+                    });
+                
                 });
 
             egui::CentralPanel::default()
