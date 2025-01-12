@@ -49,6 +49,7 @@ jobs:
           include: ./assets/models,LICENSE,./${{ steps.os_lower.outputs.lowercase }}/upscayl-bin.exe
           tar: unix
           zip: windows
+          features: 'package'
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - if: runner.os != 'Windows'
