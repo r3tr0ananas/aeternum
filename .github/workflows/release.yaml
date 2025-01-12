@@ -44,12 +44,11 @@ jobs:
         name: download upscayl
         with:
           repository: 'upscayl/upscayl-ncnn'
-          latest: true
+          tag: '20240601-103425'
           fileName: '*-${{ steps.os_lower.outputs.lowercase }}.zip'
-          out-file-path: 'upscayl.zip'
 
       - name: unzip upscayl
-        run: 7z x upscayl.zip
+        run: 7z x upscayl-bin-20240601-103425-${{ steps.os_lower.outputs.lowercase }}.zip -o./upscayl
 
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
