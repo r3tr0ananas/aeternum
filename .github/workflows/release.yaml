@@ -48,7 +48,7 @@ jobs:
           fileName: '*-${{ steps.os_lower.outputs.lowercase }}.zip'
 
       - name: unzip upscayl
-        run: 7z x upscayl-bin-20240601-103425-${{ steps.os_lower.outputs.lowercase }}.zip -o./upscayl
+        run: 7z x upscayl-bin-20240601-103425-${{ steps.os_lower.outputs.lowercase }}.zip "-oupscayl"
 
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
