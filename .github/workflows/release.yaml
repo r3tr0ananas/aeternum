@@ -38,11 +38,12 @@ jobs:
         with:
           string: ${{ runner.os }}
 
-      - name: download and unzip upscayl-ncnn
+      - name: download upscayl-ncnn
         run: |
           curl -o upscayl.zip https://github.com/upscayl/upscayl-ncnn/releases/download/20240601-103425/upscayl-bin-20240601-103425-${{ steps.os_lower.outputs.lowercase }}.zip
-          
-          7z x upscayl.zip
+
+      - name: unzip upscayl-ncnn
+        run: 7z x upscayl.zip
 
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
