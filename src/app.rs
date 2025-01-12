@@ -152,100 +152,100 @@ impl eframe::App for Aeternum<'_> {
                 .show(ctx, |ui| {
                     ui.add_enabled_ui(!self.upscale.upscaling, |ui| {
                         egui::Grid::new("options_grid")
-                        .spacing([20.0, 45.0])
-                        .show(ui, |ui| {
-                            ui.vertical_centered_justified(|ui| {
-                                ui.label("Model");
+                            .spacing([20.0, 45.0])
+                            .show(ui, |ui| {
+                                ui.vertical_centered_justified(|ui| {
+                                    ui.label("Model");
 
-                                let selected = match &self.upscale.options.model {
-                                    Some(model) => model.name.clone(),
-                                    None => "Select a Model".to_string(),
-                                };
+                                    let selected = match &self.upscale.options.model {
+                                        Some(model) => model.name.clone(),
+                                        None => "Select a Model".to_string(),
+                                    };
 
-                                ui.vertical_centered(|ui| {
-                                    egui::ComboBox::from_id_salt("select_model")
-                                        .selected_text(selected)
-                                        .width(230.0)
-                                        .show_ui(ui, |ui| {
-                                            for model in self.upscale.models.iter() {
-                                                ui.selectable_value(
-                                                    &mut self.upscale.options.model,
-                                                    Some(model.clone()),
-                                                    model.name.to_string()
-                                                );
-                                            }
-                                        });
+                                    ui.vertical_centered(|ui| {
+                                        egui::ComboBox::from_id_salt("select_model")
+                                            .selected_text(selected)
+                                            .width(230.0)
+                                            .show_ui(ui, |ui| {
+                                                for model in self.upscale.models.iter() {
+                                                    ui.selectable_value(
+                                                        &mut self.upscale.options.model,
+                                                        Some(model.clone()),
+                                                        model.name.to_string()
+                                                    );
+                                                }
+                                            });
+                                    });
                                 });
-                            });
-                            ui.end_row();
+                                ui.end_row();
 
-                            ui.vertical_centered_justified(|ui| {
-                                ui.label("Scale");
-                                ui.add(
-                                    Slider::new(&mut self.upscale.options.scale, 1..=16)
-                                );
+                                ui.vertical_centered_justified(|ui| {
+                                    ui.label("Scale");
+                                    ui.add(
+                                        Slider::new(&mut self.upscale.options.scale, 1..=16)
+                                    );
 
-                                let scale = self.upscale.options.scale;
-                                let width = image.image_size.width as i32;
-                                let height = image.image_size.height as i32;
+                                    let scale = self.upscale.options.scale;
+                                    let width = image.image_size.width as i32;
+                                    let height = image.image_size.height as i32;
 
-                                ui.label(format!("({}x{})", width * scale, height * scale));
-                            });
-                            ui.end_row();
+                                    ui.label(format!("({}x{})", width * scale, height * scale));
+                                });
+                                ui.end_row();
 
-                            ui.vertical_centered_justified(|ui| {
-                                ui.label("Compression");
-                                ui.add(
-                                    Slider::new(&mut self.upscale.options.compression, 0..=100)
-                                );
-                            });
-                            ui.end_row();
+                                ui.vertical_centered_justified(|ui| {
+                                    ui.label("Compression");
+                                    ui.add(
+                                        Slider::new(&mut self.upscale.options.compression, 0..=100)
+                                    );
+                                });
+                                ui.end_row();
 
-                            ui.vertical_centered_justified(|ui| {
-                                ui.label("Output file");
+                                ui.vertical_centered_justified(|ui| {
+                                    ui.label("Output file");
 
-                                let output_button = match &self.upscale.options.output {
-                                    Some(path) => ui.button(path.to_str().unwrap()),
-                                    None => {
-                                        let model = self.upscale.options.model.is_some();
+                                    let output_button = match &self.upscale.options.output {
+                                        Some(path) => ui.button(path.to_str().unwrap()),
+                                        None => {
+                                            let model = self.upscale.options.model.is_some();
 
-                                        ui.add_enabled(
-                                            model,
-                                            egui::Button::new("Select output")
-                                        ).on_disabled_hover_text("Select a model before setting the output file.")
-                                    }
-                                };
+                                            ui.add_enabled(
+                                                model,
+                                                egui::Button::new("Select output")
+                                            ).on_disabled_hover_text("Select a model before setting the output file.")
+                                        }
+                                    };
 
-                                if output_button.clicked() {
-                                    match files::save_image(&image, &self.upscale.options) {
-                                        Ok(output) => self.upscale.options.output = Some(output),
-                                        Err(error) => {
-                                            self.notifier.toasts.lock().unwrap()
-                                                .toast_and_log(error.into(), ToastLevel::Error)
-                                                .duration(Some(Duration::from_secs(5)));
+                                    if output_button.clicked() {
+                                        match files::save_image(&image, &self.upscale.options) {
+                                            Ok(output) => self.upscale.options.output = Some(output),
+                                            Err(error) => {
+                                                self.notifier.toasts.lock().unwrap()
+                                                    .toast_and_log(error.into(), ToastLevel::Error)
+                                                    .duration(Some(Duration::from_secs(5)));
+                                            }
                                         }
                                     }
-                                }
+                                });
+                                ui.end_row();
+
+                                let (button_enabled, disabled_text) = match self.upscale.options.model.is_some() {
+                                    false => (false, "No model selected."),
+                                    true => (true, "")
+                                };
+
+                                ui.vertical_centered_justified(|ui| {
+                                    let upscale_button = ui.add_enabled(
+                                        button_enabled,
+                                        egui::Button::new(RichText::new("Upscale").size(20.0))
+                                            .min_size([50.0, 60.0].into())
+                                    ).on_disabled_hover_text(disabled_text);
+
+                                    if upscale_button.clicked() {
+                                        self.upscale.upscale(image.clone(), &mut self.notifier);
+                                    }
+                                });
                             });
-                            ui.end_row();
-
-                            let (button_enabled, disabled_text) = match self.upscale.options.model.is_some() {
-                                false => (false, "No model selected."),
-                                true => (true, "")
-                            };
-
-                            ui.vertical_centered_justified(|ui| {
-                                let upscale_button = ui.add_enabled(
-                                    button_enabled,
-                                    egui::Button::new(RichText::new("Upscale").size(20.0))
-                                        .min_size([50.0, 60.0].into())
-                                ).on_disabled_hover_text(disabled_text);
-
-                                if upscale_button.clicked() {
-                                    self.upscale.upscale(image.clone(), &mut self.notifier);
-                                }
-                            });
-                        });
                     });
                 
                 });
