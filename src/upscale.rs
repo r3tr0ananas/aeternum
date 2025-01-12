@@ -50,7 +50,12 @@ impl Upscale {
             Ok(path) => path,
             Err(error) => return Err(Error::FailedToGetCurrentExecutablePath(Some(error.to_string())))
         };
-        let tool_path = executable_path.with_file_name("upscayl-bin");
+        
+        let tool_path = if cfg!(unix) {
+            executable_path.with_file_name("upscayl-bin")
+        } else {
+            executable_path.with_file_name("upscayl-bin.exe")
+        };
 
         if !tool_path.exists() {
             return Err(Error::UpscaylNotInPath(Some("upscayl-bin is not with the aeternum executable.".to_string())))
