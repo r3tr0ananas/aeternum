@@ -38,17 +38,17 @@ jobs:
       - id: os_lower
         uses: ASzc/change-string-case-action@v6
         with:
-          string: upscayl-bin-20240601-103425-${{ runner.os }}.zip
+          string: upscayl-bin-20240601-103425-${{ runner.os }}
 
       - uses: robinraju/release-downloader@v1
         name: download upscayl
         with:
           repository: 'upscayl/upscayl-ncnn'
           tag: '20240601-103425'
-          fileName: '${{ steps.os_lower.outputs.lowercase }}'
+          fileName: '${{ steps.os_lower.outputs.lowercase }}.zip'
 
       - name: unzip upscayl
-        run: 7z x ${{ steps.os_lower.outputs.lowercase }}
+        run: 7z x ${{ steps.os_lower.outputs.lowercase }}.zip
 
       - if: runner.os == 'Windows'
         uses: taiki-e/upload-rust-binary-action@v1
