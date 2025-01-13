@@ -36,8 +36,7 @@ pub fn select_image() -> Result<Image, Error> {
 
 pub fn save_image(image: &Image, options: &UpscaleOptions) -> Result<PathBuf, Error> {
     let binding = image.create_output(
-        &options.scale, 
-        options.model.as_ref().unwrap()
+        &options
     );
 
     let file_name = binding.file_name().unwrap().to_str().unwrap();

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use imagesize::ImageSize;
 
-use crate::{upscale::Model, Error};
+use crate::{upscale::UpscaleOptions, Error};
 
 #[derive(Clone)]
 pub struct Image {
@@ -41,14 +41,17 @@ impl Image {
         }
     }
 
-    pub fn create_output(&self, scale: &i32, model: &Model) -> PathBuf {
+    pub fn create_output(&self, options: &UpscaleOptions) -> PathBuf {
+        let model = &options.model.clone().unwrap();
+        let extension = &options.output_ext.to_string().to_lowercase();
+
         let out = self.path.with_file_name(
             format!(
                 "{}_{}_x{}.{}", 
                 self.path.file_stem().unwrap().to_string_lossy(), 
                 model.name, 
-                scale,
-                self.path.extension().unwrap().to_string_lossy()
+                &options.scale,
+                extension
             )
         );
 

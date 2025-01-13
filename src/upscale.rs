@@ -1,8 +1,19 @@
 use std::{io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::{Duration, Instant}};
 use egui_notify::ToastLevel;
 use std::process::Command;
+use strum_macros::{EnumIter, Display};
 
 use crate::{error::Error, image::Image, notifier::NotifierAPI};
+
+#[derive(Clone, PartialEq, EnumIter, Display)]
+pub enum OutputExt {
+    #[strum(to_string = "WebP")]
+    WebP,
+    #[strum(to_string = "PNG")]
+    PNG,
+    #[strum(to_string = "JPG")]
+    JPG
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
@@ -17,6 +28,7 @@ pub struct UpscaleOptions {
     pub scale: i32,
     pub compression: i32,
     pub model: Option<Model>,
+    pub output_ext: OutputExt,
     pub output: Option<PathBuf>
 }
 
@@ -36,6 +48,7 @@ impl Default for UpscaleOptions {
             scale: 4,
             compression: 0,
             model: None,
+            output_ext: OutputExt::PNG,
             output: None
         }
     }
@@ -154,8 +167,7 @@ impl Upscale {
         let out = match &self.options.output {
             Some(path) => path.clone(),
             None => image.create_output(
-                &self.options.scale,
-                self.options.model.as_ref().unwrap()
+                &self.options
             ),
         };
 

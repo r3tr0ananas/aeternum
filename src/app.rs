@@ -1,9 +1,10 @@
 use cirrus_theming::v1::{Colour, Theme};
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Stroke, Vec2};
 use egui_notify::ToastLevel;
+use strum::IntoEnumIterator;
 use std::time::Duration;
 
-use crate::{config::config::Config, files, notifier::NotifierAPI, upscale::Upscale, windows::about::AboutWindow, Image};
+use crate::{config::config::Config, files, notifier::NotifierAPI, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image};
 
 pub struct Aeternum<'a> {
     theme: Theme,
@@ -198,6 +199,27 @@ impl eframe::App for Aeternum<'_> {
                                     ui.add(
                                         Slider::new(&mut self.upscale.options.compression, 0..=100)
                                     );
+                                });
+                                ui.end_row();
+
+
+                                ui.vertical_centered_justified(|ui| {
+                                    ui.label("Save image as");
+
+                                    let selected_ext = &self.upscale.options.output_ext.to_string();
+
+                                    egui::ComboBox::from_id_salt("select_model")
+                                        .selected_text(selected_ext)
+                                        .width(230.0)
+                                        .show_ui(ui, |ui| {
+                                            for extension in OutputExt::iter() {
+                                                ui.selectable_value(
+                                                    &mut self.upscale.options.output_ext,
+                                                    extension.clone(),
+                                                    extension.to_string()
+                                                );
+                                            }
+                                        });
                                 });
                                 ui.end_row();
 
