@@ -113,11 +113,7 @@ impl Upscale {
                     upscaling_arc: Arc::new(false.into())
                 })
             },
-            Err(err) => {
-                let err_mesage = err.to_string();
-
-                Err(Error::UpscaylNotInPath(Some(err_mesage)))
-            }
+            Err(err) => Err(Error::UpscaylNotInPath(Some(err.to_string())))
         }
     }
 
