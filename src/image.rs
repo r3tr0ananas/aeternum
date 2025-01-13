@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-
 use imagesize::ImageSize;
 
 use crate::{upscale::UpscaleOptions, Error};
@@ -14,7 +13,7 @@ impl Image {
     pub fn from_path(path: PathBuf) -> Result<Self, Error> {
         if let Some(extension) = path.extension() {
             let allowed_extensions = vec!["png", "jpeg", "jpg", "webp"];
-            let extension_string = extension.to_string_lossy().to_string();
+            let extension_string = extension.to_string_lossy().to_string().to_lowercase();
 
             match allowed_extensions.iter().any(|e| extension_string.contains(e)) {
                 true => {
