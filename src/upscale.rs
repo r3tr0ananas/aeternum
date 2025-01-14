@@ -287,6 +287,10 @@ impl Upscale {
         for entry in glob::glob(&gl).unwrap() {
             match entry {
                 Ok(entry_path) => {
+                    if format!("{}", entry_path.display()).contains("video") {
+                        continue;
+                    }
+
                     let param_file = entry_path.with_file_name(
                         format!("{}.param", entry_path.file_stem().unwrap().to_string_lossy())
                     );
