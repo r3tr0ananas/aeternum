@@ -191,6 +191,12 @@ impl Upscale {
 
             let mut upscale_command = Command::new(cli_path.to_string_lossy().to_string());
 
+            if cfg!(windows) {
+                use std::os::windows::process::CommandExt;
+
+                upscale_command.creation_flags(0x08000000);
+            }
+
             let model = &options.model.unwrap();
 
             let cmd = upscale_command
