@@ -36,7 +36,6 @@ impl Config {
         }
 
         let models_folder = aeternum_config_dir_path.join("models");
-        println!("{:#?}, {:?}", models_folder, !models_folder.exists());
 
         if !models_folder.exists() {
             debug!("Creating models directory for aeternum...");
