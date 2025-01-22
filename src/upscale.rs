@@ -117,18 +117,15 @@ impl Upscale {
         }
     }
 
-    pub fn init(&mut self, custom_path: Option<String>) -> Result<(), Error> {
-        match custom_path {
-            Some(path) => {
-                let path = PathBuf::from(path);
+    pub fn init(&mut self, enabled: bool) -> Result<(), Error> {
+        if enabled {
+            let path: PathBuf = dirs::config_local_dir().unwrap().join("cloudy").join("aeternum").join("models");
 
-                if path.exists() {
-                    self.get_models(path);
-                } else {
-                    return Err(Error::NoModels(Some("Custom folder doesn't exist.".to_string()), path))
-                }
-            },
-            None => {}
+            if path.exists() {
+                self.get_models(path);
+            } else {
+                return Err(Error::NoModels(Some("Custom folder doesn't exist.".to_string()), path))
+            }
         }
 
         self.get_models(self.models_folder.clone());
