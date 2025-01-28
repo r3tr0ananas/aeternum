@@ -164,14 +164,6 @@ impl Upscale {
             ),
         };
 
-        if out.exists() {
-            notifier.toasts.lock().unwrap()
-                .toast_and_log("Image already exists!".into(), ToastLevel::Info)
-                .duration(Some(Duration::from_secs(10)));
-
-            return;
-        }
-
         let path = path.clone();
         let cli_path = self.cli_path.clone();
         let upscaling_arc = self.upscaling_arc.clone();
