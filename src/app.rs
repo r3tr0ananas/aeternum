@@ -224,7 +224,7 @@ impl eframe::App for Aeternum<'_> {
                                 ui.end_row();
 
                                 ui.vertical_centered_justified(|ui| {
-                                    ui.label("Output file");
+                                    ui.label("Output folder");
 
                                     let output_button = match &self.upscale.options.output {
                                         Some(path) => ui.button(path.to_str().unwrap()),
@@ -234,12 +234,12 @@ impl eframe::App for Aeternum<'_> {
                                             ui.add_enabled(
                                                 model,
                                                 egui::Button::new("Select output")
-                                            ).on_disabled_hover_text("Select a model before setting the output file.")
+                                            ).on_disabled_hover_text("Select a model before setting the output folder.")
                                         }
                                     };
 
                                     if output_button.clicked() {
-                                        match files::save_image(&image, &self.upscale.options) {
+                                        match files::save_folder() {
                                             Ok(output) => self.upscale.options.output = Some(output),
                                             Err(error) => {
                                                 self.notifier.toasts.lock().unwrap()

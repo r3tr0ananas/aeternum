@@ -157,12 +157,14 @@ impl Upscale {
 
         let path = &image.path;
 
-        let out = match &self.options.output {
+        let output_folder = match &self.options.output {
             Some(path) => path.clone(),
-            None => image.create_output(
-                &self.options
-            ),
+            None => image.path.parent().unwrap().to_path_buf()
         };
+
+        let out = output_folder.join(
+            image.create_output(&self.options)
+        );
 
         let path = path.clone();
         let cli_path = self.cli_path.clone();
