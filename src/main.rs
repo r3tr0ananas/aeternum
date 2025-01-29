@@ -3,7 +3,7 @@
 use std::{env, path::PathBuf, time::Duration};
 
 use app::Aeternum;
-use image::Image;
+use image::{Image, load_icon};
 use log::debug;
 use eframe::egui::{self, Style};
 use egui_notify::ToastLevel;
@@ -49,7 +49,8 @@ fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
         .with_inner_size([800.0, 600.0])
-        .with_drag_and_drop(true),
+        .with_drag_and_drop(true)
+        .with_icon(load_icon()),
         ..Default::default()
     };
 

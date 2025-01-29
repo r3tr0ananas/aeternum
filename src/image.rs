@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use eframe::egui;
 use imagesize::ImageSize;
 
 use crate::{upscale::UpscaleOptions, Error};
@@ -55,5 +56,23 @@ impl Image {
         );
 
         out
+    }
+}
+
+pub fn load_icon() -> egui::IconData {
+    let (icon_rgba, icon_width, icon_height) = {
+        let image_bytes = include_bytes!("../assets/aeternum.ico");
+        let image = image::load_from_memory(image_bytes)
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+
+    egui::IconData {
+        rgba: icon_rgba,
+        width: icon_width,
+        height: icon_height,
     }
 }

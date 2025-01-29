@@ -1,0 +1,50 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - v[0-9]+.*
+
+jobs:
+  upload-assets:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - id: os_lower
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: upscayl-bin-20240601-103425-${{ runner.os }}
+
+      - uses: robinraju/release-downloader@v1
+        name: download upscayl
+        with:
+          repository: 'upscayl/upscayl-ncnn'
+          tag: '20240601-103425'
+          fileName: '${{ steps.os_lower.outputs.lowercase }}.zip'
+
+      - name: unzip upscayl
+        run: |
+          7z x ${{ steps.os_lower.outputs.lowercase }}.zip
+          mv ${{ steps.os_lower.outputs.lowercase }}\upscayl-bin.exe ..
+      
+      - id: get_version
+        name: Get version
+        uses: jannemattila/get-version-from-tag@v4
+
+      - name: Compile .ISS to .EXE Installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: assets/aeternum.iss
+          options: /O+ /version=${{ steps.get_version.outputs.version }}

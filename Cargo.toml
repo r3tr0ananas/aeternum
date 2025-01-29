@@ -3,7 +3,7 @@
 [package]
 name = "aeternum"
 edition = "2021"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 description = "A simple and minimal upscaler built in rust"
 authors = ["Ananas <ananas@ananas.moe>"]
 license = "GPL-3.0"
@@ -41,6 +41,9 @@ cirrus_theming = { path = "./cirrus/theming" }
 egui = "0.29.1"
 toml = "0.8.19"
 serde = {version = "1.0.215", features = ["derive"]}
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
 
 [features]
 package = []
