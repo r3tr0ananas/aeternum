@@ -39,12 +39,11 @@ jobs:
           7z x ${{ steps.os_lower.outputs.lowercase }}.zip
           mv ${{ steps.os_lower.outputs.lowercase }}\upscayl-bin.exe ..
       
-      - id: get_version
-        name: Get version
-        uses: jannemattila/get-version-from-tag@v4
+      - name: build app
+        run: cargo build --release --features "package"
 
       - name: Compile .ISS to .EXE Installer
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
         with:
           path: assets/aeternum.iss
-          options: /O+ /version=${{ steps.get_version.outputs.version }}
+          options: /O+ /version=${{ github.ref_name }}
