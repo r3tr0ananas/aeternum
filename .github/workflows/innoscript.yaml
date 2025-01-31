@@ -34,12 +34,12 @@ jobs:
           tag: '20240601-103425'
           fileName: '${{ steps.os_lower.outputs.lowercase }}.zip'
 
-      - name: unzip upscayl
+      - name: Unpack Upscayl
         run: |
           7z x ${{ steps.os_lower.outputs.lowercase }}.zip
-          mv ${{ steps.os_lower.outputs.lowercase }}\upscayl-bin.exe ..
+          move ${{ steps.os_lower.outputs.lowercase }}\upscayl-bin.exe ..
       
-      - name: build app
+      - name: Build Aeternum
         run: cargo build --release --features "package"
 
       - name: Compile .ISS to .EXE Installer
