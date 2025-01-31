@@ -37,7 +37,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\upscayl-bin.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\upscayl-bin-20240601-103425-windows\upscayl-bin.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "models\*"; DestDir: "{app}\models"; Flags: ignoreversion
 
 [Icons]
