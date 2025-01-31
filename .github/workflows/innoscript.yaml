@@ -36,9 +36,6 @@ jobs:
 
       - name: Unpack Upscayl
         run: 7z x ${{ steps.os_lower.outputs.lowercase }}.zip
-
-      - name: move upscayl bin into root
-        run: move ${{ steps.os_lower.outputs.lowercase }}\upscayl-bin.exe ..
       
       - name: Build Aeternum
         run: cargo build --release --features "package"
