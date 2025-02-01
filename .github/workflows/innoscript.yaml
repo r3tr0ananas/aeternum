@@ -45,3 +45,6 @@ jobs:
         with:
           path: assets/aeternum.iss
           options: /O+ /version=${{ github.ref_name }}
+
+      - name: Upload Setup
+        run: gh release upload ${{ github.ref_name }} .\assets\Output\aeternum-setup.exe
